@@ -1,1 +1,16 @@
-
+from flask import Flask, request, jsonify
+app = Flask(__name__)
+@app.route('/calculate-average', methods=['POST'])
+def calculate_average():
+    # Get the JSON data from the request
+    data = request.get_json()
+    if 'numbers' not in data:
+        return jsonify({'error': 'Numbers field is missing'}), 400
+    numbers = data['numbers']
+    if not isinstance(numbers, list) or len(numbers) == 0:
+        return jsonify({'error': 'Numbers should be a non-empty list'}), 400
+    total = sum(numbers)
+    average = total / len(numbers)
+    return jsonify({'average': average})
+if __name__ == '__main__':
+    app.run(debug=True)
