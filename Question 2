@@ -1,1 +1,79 @@
-
+import React, { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
+import axios from 'axios';
+import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale } from 'chart.js';
+ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale);
+type SocialMediaData = {
+  date: string;
+  likes: number;
+  comments: number;
+};
+const SocialMediaChart: React.FC = () => {
+  const [data, setData] = useState<SocialMediaData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  useEffect(() => {
+    const mockData: SocialMediaData[] = [
+      { date: '2025-03-01', likes: 120, comments: 40 },
+      { date: '2025-03-02', likes: 150, comments: 55 },
+      { date: '2025-03-03', likes: 180, comments: 65 },
+      { date: '2025-03-04', likes: 200, comments: 75 },
+      { date: '2025-03-05', likes: 250, comments: 90 },
+    ];
+    setData(mockData);
+    setLoading(false);
+  }, []);
+  const getAverage = async (numbers: number[]) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/calculate-average', {
+        numbers: numbers,
+      });
+      return response.data.average;
+    } catch (error) {
+      console.error('Error calculating average:', error);
+      return 0;
+    }
+  };
+  const calculateAverages = async () => {
+    const likes = data.map((item) => item.likes);
+    const comments = data.map((item) => item.comments);
+    const likesAverage = await getAverage(likes);
+    const commentsAverage = await getAverage(comments);
+    return { likesAverage, commentsAverage };
+  };
+  const chartData = {
+    labels: data.map((item) => item.date),
+    datasets: [
+      {
+        label: 'Likes',
+        data: data.map((item) => item.likes),
+        borderColor: 'rgba(75,192,192,1)',
+        fill: false,
+      },
+      {
+        label: 'Comments',
+        data: data.map((item) => item.comments),
+        borderColor: 'rgba(153,102,255,1)',
+        fill: false,
+      },
+    ],
+  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  return (
+    <div>
+      <h2>Social Media Analytics</h2>
+      <Line data={chartData} />
+      <div>
+        <h3>Averages</h3>
+        <button onClick={async () => {
+          const { likesAverage, commentsAverage } = await calculateAverages();
+          alert(`Likes Average: ${likesAverage}\nComments Average: ${commentsAverage}`);
+        }}>
+          Calculate Averages
+        </button>
+      </div>
+    </div>
+  );
+};
+export default SocialMediaChart;
